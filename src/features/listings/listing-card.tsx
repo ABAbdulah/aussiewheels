@@ -1,8 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { MapPin, Gauge, Heart, Camera } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export type ListingCardProps = {
   id: string;
@@ -13,24 +15,35 @@ export type ListingCardProps = {
   year?: number;
   transmission?: string;
   fuel?: string;
+  bodyType?: string;
+  cylinders?: string;
   location?: string;
   imageUrl?: string;
   priceIndicator?: "great" | "fair" | "high";
+  driveaway?: boolean;
+  driveawayPrice?: number;
+  condition?: "new" | "used" | "demo";
+  sellerType?: "dealer" | "private";
+  photoCount?: number;
+  showActions?: boolean;
 };
 
-const priceIndicatorLabel = {
-  great: "Great price",
-  fair: "Fair price",
-  high: "Above market",
-} as const;
+const conditionLabel: Record<string, string> = {
+  new: "Dealer new",
+  used: "Dealer used",
+  demo: "Dealer demo",
+};
 
-const priceIndicatorVariant: Record<
-  NonNullable<ListingCardProps["priceIndicator"]>,
-  "default" | "secondary" | "destructive"
-> = {
-  great: "default",
-  fair: "secondary",
-  high: "destructive",
+const priceIndicatorStyle: Record<string, string> = {
+  great: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
+  fair: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-400",
+  high: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
+};
+
+const priceIndicatorLabel: Record<string, string> = {
+  great: "Great price",
+  fair: "Around market price",
+  high: "Above market",
 };
 
 const aud = new Intl.NumberFormat("en-AU", {
@@ -40,69 +53,141 @@ const aud = new Intl.NumberFormat("en-AU", {
 });
 
 export function ListingCard({
-  id,
-  title,
-  subtitle,
-  price,
-  km,
-  year,
-  transmission,
-  fuel,
-  location,
-  imageUrl,
-  priceIndicator,
+  id, title, subtitle, price, km, transmission, bodyType, cylinders,
+  location, imageUrl, priceIndicator, driveaway, driveawayPrice, condition,
+  sellerType = "dealer", photoCount, showActions = false,
 }: ListingCardProps) {
-  const specs = [
-    year?.toString(),
-    km != null ? `${km.toLocaleString("en-AU")} km` : null,
-    transmission,
-    fuel,
-  ].filter(Boolean);
-
   return (
-    <Link href={`/listing/${id}`} className="group">
-      <Card className="overflow-hidden py-0 transition-shadow hover:shadow-md">
-        <div className="relative aspect-[4/3] bg-muted">
+    <div className="group relative flex flex-col overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-md">
+      {/* Photo area */}
+      <Link href={`/listing/${id}`} className="block">
+        <div className="relative aspect-16/10 overflow-hidden bg-muted">
           {imageUrl ? (
             <Image
               src={imageUrl}
               alt={title}
               fill
-              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-              className="object-cover transition-transform group-hover:scale-[1.02]"
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-              No photo
+            <div className="flex h-full w-full items-center justify-center bg-muted">
+              <Gauge className="size-8 text-muted-foreground/30" strokeWidth={1} />
             </div>
+          )}
+
+          {/* Photo count */}
+          {photoCount && photoCount > 0 && (
+            <span className="absolute left-2 top-2 flex items-center gap-1 rounded bg-black/60 px-1.5 py-0.5 text-[11px] text-white backdrop-blur-sm">
+              <Camera className="size-3" />
+              {photoCount}
+            </span>
+          )}
+
+          {/* Save */}
+          <button
+            aria-label="Save listing"
+            onClick={(e) => e.preventDefault()}
+            className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-background/80 backdrop-blur transition hover:bg-background"
+          >
+            <Heart className="size-3.5 text-foreground/50" strokeWidth={1.5} />
+          </button>
+        </div>
+      </Link>
+
+      {/* Content */}
+      <div className="flex flex-1 flex-col p-3.5">
+        {/* Badges row */}
+        <div className="mb-2 flex flex-wrap items-center gap-1.5">
+          {condition && (
+            <span className="rounded border px-2 py-0.5 text-[11px] font-light text-foreground/70">
+              {sellerType === "private" ? "Private seller" : conditionLabel[condition] ?? condition}
+            </span>
           )}
           {priceIndicator && (
-            <Badge variant={priceIndicatorVariant[priceIndicator]} className="absolute left-3 top-3">
+            <span className={cn("flex items-center gap-1 rounded border px-2 py-0.5 text-[11px] font-light", priceIndicatorStyle[priceIndicator])}>
               {priceIndicatorLabel[priceIndicator]}
-            </Badge>
+            </span>
           )}
         </div>
-        <CardContent className="p-4">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <h3 className="truncate text-sm font-semibold">{title}</h3>
-              {subtitle && (
-                <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
-              )}
+
+        {/* Title */}
+        <Link href={`/listing/${id}`}>
+          <h3 className="line-clamp-2 text-base font-semibold leading-snug tracking-tight hover:text-primary transition-colors">
+            {title}
+          </h3>
+        </Link>
+        {subtitle && (
+          <p className="mt-0.5 truncate text-xs font-light text-muted-foreground">{subtitle}</p>
+        )}
+
+        {/* Price */}
+        <div className="mt-2.5">
+          <span className="text-xl font-bold tracking-tight">{aud.format(price)}</span>
+          {(driveaway || driveawayPrice) && (
+            <div className="mt-0.5 text-xs font-light">
+              Drive away{" "}
+              {driveawayPrice && (
+                <span className="text-primary">{aud.format(driveawayPrice)}</span>
+              )}{" "}
+              <span className="text-muted-foreground">Excl. Est. Govt. Charges</span>
             </div>
-            <p className="shrink-0 text-sm font-semibold">{aud.format(price)}</p>
+          )}
+        </div>
+
+        {/* Specs grid */}
+        {(bodyType || cylinders || transmission || km != null) && (
+          <div className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-1 text-xs font-light text-muted-foreground">
+            {bodyType && (
+              <span className="flex items-center gap-1.5 truncate">
+                <span className="size-3 shrink-0">🚗</span>{bodyType}
+              </span>
+            )}
+            {cylinders && (
+              <span className="flex items-center gap-1.5 truncate">
+                <span className="size-3 shrink-0">⚙️</span>{cylinders}
+              </span>
+            )}
+            {transmission && (
+              <span className="flex items-center gap-1.5 truncate">
+                <span className="size-3 shrink-0">🔧</span>{transmission}
+              </span>
+            )}
+            {km != null && (
+              <span className="flex items-center gap-1.5 truncate">
+                <Gauge className="size-3 shrink-0" strokeWidth={1.5} />
+                {km.toLocaleString("en-AU")} km
+              </span>
+            )}
           </div>
-          {specs.length > 0 && (
-            <p className="mt-2 truncate text-xs text-muted-foreground">{specs.join(" · ")}</p>
-          )}
-          {location && (
-            <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-              <MapPin className="size-3" />
-              {location}
-            </p>
-          )}
-        </CardContent>
-      </Card>
-    </Link>
+        )}
+
+        {/* Location */}
+        {location && (
+          <p className="mt-2 flex items-center gap-1 text-[11px] font-light text-muted-foreground">
+            <MapPin className="size-3 shrink-0" strokeWidth={1.5} />
+            {location}
+          </p>
+        )}
+
+        {/* Action buttons */}
+        {showActions && (
+          <div className="mt-3.5 grid grid-cols-2 gap-2">
+            <Link
+              href={`/listing/${id}#contact`}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "w-full rounded-lg! font-light text-xs")}
+            >
+              Contact dealer
+            </Link>
+            <Link
+              href={`/listing/${id}`}
+              className={cn(buttonVariants({ size: "sm" }), "w-full rounded-lg! font-light text-xs")}
+            >
+              View details
+            </Link>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

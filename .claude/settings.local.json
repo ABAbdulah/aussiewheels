@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($conns = Get-NetTCPConnection -LocalPort 4000 -State Listen -ErrorAction SilentlyContinue; foreach \\($c in $conns\\) { $p = Get-Process -Id $c.OwningProcess -ErrorAction SilentlyContinue; if \\($p\\) { Write-Output \\(\"PID={0} Name={1} StartTime={2}\" -f $p.Id, $p.ProcessName, $p.StartTime\\) } })",
+      "PowerShell(Start-Sleep -Seconds 1; $conns = Get-NetTCPConnection -LocalPort 3000,3001 -State Listen -ErrorAction SilentlyContinue; foreach \\($c in $conns\\) { $p = Get-Process -Id $c.OwningProcess -ErrorAction SilentlyContinue; if \\($p\\) { Write-Output \\(\"Port={0} PID={1} Name={2} StartTime={3}\" -f $c.LocalPort, $p.Id, $p.ProcessName, $p.StartTime\\) } })"
+    ]
+  }
+}
