@@ -1,10 +1,12 @@
+const stripTrailingSlash = (s: string) => s.replace(/\/+$/, "");
+
 export const siteConfig = {
   name: "AussieWheels",
   tagline: "Australia's smarter way to buy and sell vehicles",
   description:
     "Browse new, used and demo cars, bikes, caravans and more across Australia. Transparent pricing, AI-assisted search, trusted sellers.",
   url: process.env.NEXT_PUBLIC_APP_NAME ?? "http://localhost:3000",
-  apiUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000",
+  apiUrl: stripTrailingSlash(process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000"),
 } as const;
 
 export const verticals = [

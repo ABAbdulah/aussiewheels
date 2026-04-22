@@ -1,114 +1,72 @@
 import Link from "next/link";
+import Image from "next/image";
 
-type BodyType = {
-  label: string;
-  href: string;
-  svg: React.ReactNode;
-};
-
-/* Minimal car-silhouette paths — side profile view */
-const SUVSVG = () => (
-  <svg viewBox="0 0 80 36" fill="none" className="w-full" aria-hidden>
-    <path d="M14 24c0-3 1-10 4-13l8-4h24l8 4c3 3 4 10 4 13" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinejoin="round"/>
-    <path d="M4 24h72v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z" fill="currentColor" opacity={0.15}/>
-    <circle cx="20" cy="28" r="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-    <circle cx="60" cy="28" r="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-  </svg>
-);
-
-const HatchSVG = () => (
-  <svg viewBox="0 0 80 36" fill="none" className="w-full" aria-hidden>
-    <path d="M20 24c0-3 2-9 5-11l8-5h14l10 8c2 2 3 5 3 8" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinejoin="round"/>
-    <path d="M4 24h72v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z" fill="currentColor" opacity={0.15}/>
-    <circle cx="22" cy="28" r="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-    <circle cx="58" cy="28" r="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-  </svg>
-);
-
-const UteSVG = () => (
-  <svg viewBox="0 0 80 36" fill="none" className="w-full" aria-hidden>
-    <path d="M16 24c0-3 1-9 4-12l6-4h16v16" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinejoin="round"/>
-    <path d="M42 8h20v16H42z" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinejoin="round"/>
-    <path d="M4 24h72v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z" fill="currentColor" opacity={0.15}/>
-    <circle cx="20" cy="28" r="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-    <circle cx="60" cy="28" r="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-  </svg>
-);
-
-const EVSVG = () => (
-  <svg viewBox="0 0 80 36" fill="none" className="w-full" aria-hidden>
-    <path d="M16 24c0-3 1-9 4-12l10-5h20l10 5c3 3 4 9 4 12" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinejoin="round"/>
-    <path d="M4 24h72v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z" fill="currentColor" opacity={0.15}/>
-    <circle cx="22" cy="28" r="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-    <circle cx="58" cy="28" r="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-    <path d="M36 16l-3 5h6l-3 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const HybridSVG = () => (
-  <svg viewBox="0 0 80 36" fill="none" className="w-full" aria-hidden>
-    <path d="M16 24c0-3 1-9 4-12l10-5h20l10 5c3 3 4 9 4 12" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinejoin="round"/>
-    <path d="M4 24h72v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z" fill="currentColor" opacity={0.15}/>
-    <circle cx="22" cy="28" r="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-    <circle cx="58" cy="28" r="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-    <path d="M34 16q4-3 8 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M37 18v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-  </svg>
-);
-
-const FourWDSVG = () => (
-  <svg viewBox="0 0 80 36" fill="none" className="w-full" aria-hidden>
-    <path d="M12 24c0-3 1-11 5-14l8-3h30l8 3c4 3 5 11 5 14" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinejoin="round"/>
-    <path d="M4 24h72v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z" fill="currentColor" opacity={0.15}/>
-    <circle cx="18" cy="28" r="5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-    <circle cx="62" cy="28" r="5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-  </svg>
-);
-
-const PerfSVG = () => (
-  <svg viewBox="0 0 80 36" fill="none" className="w-full" aria-hidden>
-    <path d="M10 24c0-2 2-7 5-9l12-6h26l12 6c3 2 5 7 5 9" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinejoin="round"/>
-    <path d="M4 24h72v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z" fill="currentColor" opacity={0.15}/>
-    <circle cx="20" cy="28" r="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-    <circle cx="60" cy="28" r="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-    <path d="M32 18h16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-  </svg>
-);
-
-const NewCarsSVG = () => (
-  <svg viewBox="0 0 80 36" fill="none" className="w-full" aria-hidden>
-    <path d="M16 24c0-3 1-9 4-12l10-5h20l10 5c3 3 4 9 4 12" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinejoin="round"/>
-    <path d="M4 24h72v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z" fill="currentColor" opacity={0.15}/>
-    <circle cx="22" cy="28" r="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-    <circle cx="58" cy="28" r="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-    <path d="M36 6l1.5 3h3.5l-2.5 2 1 3.5L37 13l-2.5 1.5 1-3.5L33 9h3.5z" fill="currentColor" opacity={0.7}/>
-  </svg>
-);
-
-const bodyTypes: BodyType[] = [
-  { label: "New cars", href: "/buy/cars?condition=new", svg: <NewCarsSVG /> },
-  { label: "EV", href: "/buy/cars?fuel=electric", svg: <EVSVG /> },
-  { label: "Hybrid", href: "/buy/cars?fuel=hybrid", svg: <HybridSVG /> },
-  { label: "SUV", href: "/buy/cars?body=suv", svg: <SUVSVG /> },
-  { label: "Ute", href: "/buy/cars?body=ute", svg: <UteSVG /> },
-  { label: "Hatch", href: "/buy/cars?body=hatch", svg: <HatchSVG /> },
-  { label: "Offroad 4x4", href: "/buy/cars?body=4x4", svg: <FourWDSVG /> },
-  { label: "Performance", href: "/buy/cars?body=performance", svg: <PerfSVG /> },
+const bodyTypes = [
+  {
+    label: "New cars",
+    href: "/buy/cars?condition=new",
+    img: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=320&h=180&auto=format&fit=crop",
+  },
+  {
+    label: "Electric",
+    href: "/buy/cars?fuel=electric",
+    img: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=320&h=180&auto=format&fit=crop",
+  },
+  {
+    label: "Hybrid",
+    href: "/buy/cars?fuel=hybrid",
+    img: "https://images.unsplash.com/photo-1623869675781-80aa31012a5a?w=320&h=180&auto=format&fit=crop",
+  },
+  {
+    label: "SUV",
+    href: "/buy/cars?body=suv",
+    img: "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=320&h=180&auto=format&fit=crop",
+  },
+  {
+    label: "Ute",
+    href: "/buy/cars?body=ute",
+    img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=320&h=180&auto=format&fit=crop",
+  },
+  {
+    label: "Hatch",
+    href: "/buy/cars?body=hatch",
+    img: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=320&h=180&auto=format&fit=crop",
+  },
+  {
+    label: "Offroad 4×4",
+    href: "/buy/cars?body=4x4",
+    img: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=320&h=180&auto=format&fit=crop",
+  },
+  {
+    label: "Performance",
+    href: "/buy/cars?body=performance",
+    img: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=320&h=180&auto=format&fit=crop",
+  },
 ];
 
 export function BodyTypePicker() {
   return (
-    <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-4 md:grid-cols-8">
-      {bodyTypes.map(({ label, href, svg }) => (
+    <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
+      {bodyTypes.map(({ label, href, img }) => (
         <Link
           key={label}
           href={href}
-          className="group flex shrink-0 w-[88px] sm:w-auto flex-col items-center gap-2 rounded-xl p-3 text-center transition-colors hover:bg-accent"
+          className="group flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
         >
-          <div className="w-16 text-foreground/50 transition-colors group-hover:text-primary group-hover:scale-105 transform duration-150">
-            {svg}
+          <div className="relative aspect-video w-full overflow-hidden bg-muted/40">
+            <Image
+              src={img}
+              alt={label}
+              fill
+              sizes="(min-width: 640px) 12.5vw, 25vw"
+              className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+            />
           </div>
-          <span className="text-xs font-light leading-tight">{label}</span>
+          <div className="px-2 py-2.5 text-center">
+            <span className="text-[11px] font-medium tracking-wide text-foreground/70 transition-colors group-hover:text-primary">
+              {label}
+            </span>
+          </div>
         </Link>
       ))}
     </div>
