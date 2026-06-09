@@ -103,7 +103,7 @@ export default function AuthPage() {
 
             {mode === "in" && (
               <div className="text-right">
-                <button type="button" className="text-xs font-medium text-brand hover:underline">Forgot password?</button>
+                <Link href="/auth/forgot" className="text-xs font-medium text-brand hover:underline">Forgot password?</Link>
               </div>
             )}
 

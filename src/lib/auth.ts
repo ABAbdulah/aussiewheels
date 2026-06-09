@@ -51,6 +51,26 @@ export const signup = (name: string, email: string, password: string) =>
 export const login = (email: string, password: string) =>
   post("/api/v1/auth/login", { email, password });
 
+// Resetting a password returns a fresh session, so the user is signed in after.
+export const resetPassword = (email: string, code: string, password: string) =>
+  post("/api/v1/auth/reset-password", { email, code, password });
+
+export async function requestPasswordReset(email: string): Promise<string> {
+  const res = await fetch(`${siteConfig.apiUrl}/api/v1/auth/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  let data: { message?: string } = {};
+  try {
+    data = await res.json();
+  } catch {
+    /* noop */
+  }
+  if (!res.ok) throw new Error(data.message ?? "Couldn't send a reset code. Please try again.");
+  return data.message ?? "If an account exists, a reset code has been sent.";
+}
+
 export function logout() {
   writeSession(null);
 }
