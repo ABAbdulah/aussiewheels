@@ -1,9 +1,10 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Eye, MessageSquare, Heart, Plus, Pencil, RefreshCw, TrendingUp } from "lucide-react";
+import { Eye, MessageSquare, Heart, Plus, TrendingUp } from "lucide-react";
 import { fetchListings } from "@/lib/api";
 import { fmtPrice, fmtNumber } from "@/lib/format";
 import { CarImage } from "@/features/listings/car-image";
+import { AdActions } from "@/features/sell/ad-actions";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -77,9 +78,8 @@ export default async function ManageListingsPage() {
                   <span className="inline-flex items-center gap-1"><TrendingUp className="size-3.5" /> Ad rating {ad.rating}/100</span>
                 </div>
 
-                <div className="mt-3 flex gap-2">
-                  <button className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-8 gap-1.5")}><Pencil className="size-3.5" /> Edit</button>
-                  <button className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-8 gap-1.5")}><RefreshCw className="size-3.5" /> Refresh</button>
+                <div className="mt-3">
+                  <AdActions slug={ad.listing.slug} title={ad.listing.title} />
                 </div>
               </div>
             </div>

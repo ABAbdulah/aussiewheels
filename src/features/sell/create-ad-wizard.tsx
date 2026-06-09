@@ -4,12 +4,13 @@ import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Car, ClipboardList, Camera, Tag, Package, CheckCircle2, ChevronLeft, ChevronRight,
-  Upload, Check, Sparkles, PartyPopper, Star,
+  Upload, Check, Sparkles, PartyPopper, Star, Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
   POPULAR_MAKES, BODY_TYPES, FUEL_TYPES, TRANSMISSIONS, DRIVE_TYPES, CONDITIONS, AU_STATES,
 } from "@/lib/site";
+import type { Listing } from "@/lib/api";
 import { fmtPrice } from "@/lib/format";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -47,16 +48,33 @@ type State = {
   pkg: string;
 };
 
-export function CreateAdWizard() {
-  const sp = useSearchParams();
-  const initialPkg = sp.get("package") ?? "premium";
-  const [step, setStep] = useState(0);
-  const [s, setS] = useState<State>({
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildInitial(edit: Listing | null | undefined, pkg: string): State {
+  if (edit) {
+    return {
+      rego: edit.rego ?? "", vin: edit.vin ?? "", make: edit.make, model: edit.model,
+      variant: edit.variant ?? "", year: String(edit.year), odometer: String(edit.odometer),
+      colour: edit.colour ?? "", transmission: edit.transmission, fuel: edit.fuel,
+      bodyType: edit.bodyType, driveType: edit.driveType ?? "", condition: cap(edit.condition),
+      suburb: edit.suburb, state: edit.state, features: edit.features ?? [],
+      description: edit.description ?? "", price: String(edit.price), photos: edit.photoCount ?? 0, pkg,
+    };
+  }
+  return {
     rego: "", vin: "", make: "", model: "", variant: "", year: "",
     odometer: "", colour: "", transmission: "Automatic", fuel: "Petrol", bodyType: "",
     driveType: "", condition: "Used", suburb: "", state: "", features: [],
-    description: "", price: "", photos: 0, pkg: initialPkg,
-  });
+    description: "", price: "", photos: 0, pkg,
+  };
+}
+
+export function CreateAdWizard({ editListing }: { editListing?: Listing | null }) {
+  const sp = useSearchParams();
+  const initialPkg = sp.get("package") ?? "premium";
+  const editing = !!editListing;
+  const [step, setStep] = useState(0);
+  const [s, setS] = useState<State>(() => buildInitial(editListing, initialPkg));
 
   const set = <K extends keyof State>(k: K, v: State[K]) => setS((p) => ({ ...p, [k]: v }));
   const toggleFeature = (f: string) =>
@@ -94,12 +112,17 @@ export function CreateAdWizard() {
   const back = () => setStep((i) => Math.max(0, i - 1));
 
   const publish = () =>
-    toast.success("Your ad is live! 🎉", {
-      description: `${s.year} ${s.make} ${s.model} listed for ${fmtPrice(priceNum)}.`,
-    });
+    editing
+      ? toast.success("Changes saved", { description: `Your ${s.year} ${s.make} ${s.model} ad has been updated.` })
+      : toast.success("Your ad is live! 🎉", { description: `${s.year} ${s.make} ${s.model} listed for ${fmtPrice(priceNum)}.` });
 
   return (
     <div className="mx-auto max-w-3xl">
+      {editing && (
+        <div className="mb-5 flex items-center gap-2 rounded-lg border border-brand/30 bg-brand/5 px-3 py-2 text-sm text-brand">
+          <Pencil className="size-4" /> Editing <span className="font-semibold">{editListing!.title}</span> — make your changes and save.
+        </div>
+      )}
       {/* Stepper */}
       <div className="mb-8 flex items-center">
         {STEPS.map((st, i) => (
@@ -345,7 +368,8 @@ export function CreateAdWizard() {
             </div>
 
             <button onClick={publish} className={cn(buttonVariants({ variant: "default" }), "mt-5 h-11 w-full gap-2 text-sm")}>
-              <PartyPopper className="size-4" /> Publish my ad — ${PACKAGES.find((p) => p.key === s.pkg)?.price}
+              <PartyPopper className="size-4" />
+              {editing ? "Save changes" : `Publish my ad — $${PACKAGES.find((p) => p.key === s.pkg)?.price}`}
             </button>
           </Step>
         )}
