@@ -1,4 +1,11 @@
-const stripTrailingSlash = (s: string) => s.replace(/\/+$/, "");
+// Normalise the API base so it's always a valid absolute URL. Tolerates a
+// value pasted without a scheme (e.g. "my-api.up.railway.app") by assuming
+// https, and strips any trailing slash.
+const normalizeApiUrl = (raw?: string) => {
+  const v = (raw ?? "http://localhost:4000").trim().replace(/\/+$/, "");
+  if (!v) return "http://localhost:4000";
+  return /^https?:\/\//i.test(v) ? v : `https://${v}`;
+};
 
 export const siteConfig = {
   name: "AussieWheels",
@@ -6,9 +13,7 @@ export const siteConfig = {
   description:
     "Browse new, used and demo cars across Australia. Transparent pricing, powerful search, trusted sellers, free valuations and secure payments.",
   url: process.env.NEXT_PUBLIC_APP_NAME ?? "http://localhost:3000",
-  apiUrl: stripTrailingSlash(
-    process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000",
-  ),
+  apiUrl: normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL),
 } as const;
 
 // ── Australian reference data ──────────────────────────────────────────────

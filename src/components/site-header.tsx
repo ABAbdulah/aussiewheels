@@ -4,6 +4,7 @@ import { Brand } from "@/components/brand";
 import { MobileNav } from "@/components/mobile-nav";
 import { NotificationBell } from "@/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { AccountMenu, AccountLink } from "@/components/account-menu";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { NAV } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -20,7 +21,7 @@ export function SiteHeader() {
           <div className="flex items-center gap-4">
             <Link href="/research/showroom" className="opacity-90 hover:opacity-100">New car showroom</Link>
             <Link href="/payments" className="opacity-90 hover:opacity-100">Pay securely</Link>
-            <Link href="/auth" className="opacity-90 hover:opacity-100">Sign in</Link>
+            <AccountLink />
           </div>
         </div>
       </div>
@@ -97,6 +98,7 @@ export function SiteHeader() {
           </Link>
           <NotificationBell />
           <ThemeToggle />
+          <AccountMenu />
 
           <Link
             href="/sell/create"

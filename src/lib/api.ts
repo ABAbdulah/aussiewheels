@@ -107,8 +107,8 @@ export async function fetchListings(
   revalidate = 30,
 ): Promise<ListingsResponse> {
   const { vertical = "cars", page = 1, limit = 20, ...rest } = filters;
-  const url = buildUrl("/api/v1/listings", { vertical, page, limit, ...rest });
   try {
+    const url = buildUrl("/api/v1/listings", { vertical, page, limit, ...rest });
     const res = await fetch(url, { next: { revalidate } });
     if (!res.ok) throw new Error(`listings ${res.status}`);
     return (await res.json()) as ListingsResponse;
@@ -118,8 +118,8 @@ export async function fetchListings(
 }
 
 export async function fetchListing(idOrSlug: string, revalidate = 30): Promise<Listing | null> {
-  const url = new URL(`/api/v1/listings/${encodeURIComponent(idOrSlug)}`, siteConfig.apiUrl);
   try {
+    const url = new URL(`/api/v1/listings/${encodeURIComponent(idOrSlug)}`, siteConfig.apiUrl);
     const res = await fetch(url, { next: { revalidate } });
     if (!res.ok) return null;
     return (await res.json()) as Listing;
@@ -129,8 +129,8 @@ export async function fetchListing(idOrSlug: string, revalidate = 30): Promise<L
 }
 
 export async function fetchFacets(vertical = "cars", revalidate = 120): Promise<Facets | null> {
-  const url = buildUrl("/api/v1/listings/facets", { vertical });
   try {
+    const url = buildUrl("/api/v1/listings/facets", { vertical });
     const res = await fetch(url, { next: { revalidate } });
     if (!res.ok) return null;
     return (await res.json()) as Facets;

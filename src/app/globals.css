@@ -143,6 +143,20 @@
     font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
     scroll-behavior: smooth;
   }
+  /* Tailwind v4 Preflight drops the default button cursor — restore it
+     platform-wide for all interactive controls. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  label:has(input[type="checkbox"]),
+  label:has(input[type="radio"]),
+  summary,
+  select:not(:disabled) {
+    cursor: pointer;
+  }
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
 }
 
 /* Tabular numerals for prices / spec figures */
