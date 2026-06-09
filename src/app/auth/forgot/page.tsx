@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, KeyRound, Eye, EyeOff, Loader2, AlertCircle, ArrowLeft, MailCheck } from "lucide-react";
+import { Mail, Lock, KeyRound, Eye, EyeOff, Loader2, AlertCircle, ArrowLeft, Clock, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { requestPasswordReset, resetPassword } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 const inputCls = "h-11 w-full rounded-lg border border-input bg-card pl-10 pr-3 text-sm outline-none focus:border-ring focus:ring-3 focus:ring-ring/30";
+const RESEND_SECONDS = 60;
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -20,7 +21,16 @@ export default function ForgotPasswordPage() {
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState(0);
+
+  // Countdown for the resend cooldown.
+  useEffect(() => {
+    if (secondsLeft <= 0) return;
+    const t = setInterval(() => setSecondsLeft((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, [secondsLeft]);
 
   async function sendCode(e: React.FormEvent) {
     e.preventDefault();
@@ -30,12 +40,29 @@ export default function ForgotPasswordPage() {
       const msg = await requestPasswordReset(email);
       toast.success("Check your email", { description: msg });
       setStep(2);
+      setSecondsLeft(RESEND_SECONDS);
     } catch (err) {
       const m = err instanceof Error ? err.message : "Something went wrong";
       setError(m);
       toast.error("Couldn't send code", { description: m });
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function resend() {
+    if (secondsLeft > 0 || resending) return;
+    setResending(true);
+    setError(null);
+    try {
+      await requestPasswordReset(email);
+      toast.success("New code sent", { description: `We emailed a fresh code to ${email}.` });
+      setSecondsLeft(RESEND_SECONDS);
+    } catch (err) {
+      const m = err instanceof Error ? err.message : "Something went wrong";
+      setError(m);
+    } finally {
+      setResending(false);
     }
   }
 
@@ -56,6 +83,8 @@ export default function ForgotPasswordPage() {
     }
   }
 
+  const mmss = `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, "0")}`;
+
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
@@ -66,7 +95,7 @@ export default function ForgotPasswordPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           {step === 1
             ? "Enter your email and we'll send you a 6-digit code to reset it."
-            : `We sent a code to ${email}. It expires in 10 minutes.`}
+            : `We sent a code to ${email}.`}
         </p>
 
         {error && (
@@ -86,11 +115,27 @@ export default function ForgotPasswordPage() {
           </form>
         ) : (
           <form className="mt-5 space-y-3" onSubmit={submitReset}>
-            <div className="mb-1 flex items-center gap-2 rounded-lg bg-accent/60 px-3 py-2 text-xs text-brand">
-              <MailCheck className="size-4" /> Code sent — check your inbox (and spam).
+            {/* Countdown / resend */}
+            <div className="flex items-center justify-between rounded-lg bg-accent/60 px-3 py-2 text-xs">
+              {secondsLeft > 0 ? (
+                <span className="flex items-center gap-1.5 text-brand">
+                  <Clock className="size-3.5" /> Resend code in <span className="font-semibold tabular-nums">{mmss}</span>
+                </span>
+              ) : (
+                <span className="text-muted-foreground">Didn&apos;t get the code?</span>
+              )}
+              <button
+                type="button"
+                onClick={resend}
+                disabled={secondsLeft > 0 || resending}
+                className="inline-flex items-center gap-1 font-semibold text-brand transition-opacity hover:underline disabled:cursor-not-allowed disabled:text-muted-foreground disabled:no-underline"
+              >
+                {resending ? <Loader2 className="size-3 animate-spin" /> : <RotateCcw className="size-3" />} Resend
+              </button>
             </div>
+
             <Field Icon={KeyRound}>
-              <input inputMode="numeric" required value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} className={cn(inputCls, "tracking-[0.4em] font-semibold")} placeholder="6-digit code" />
+              <input inputMode="numeric" required value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} className={cn(inputCls, "font-semibold tracking-[0.4em]")} placeholder="6-digit code" />
             </Field>
             <Field Icon={Lock}>
               <input type={showPw ? "text" : "password"} required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className={cn(inputCls, "pr-10")} placeholder="New password" />
@@ -101,7 +146,7 @@ export default function ForgotPasswordPage() {
             <Button type="submit" disabled={loading} className="h-11 w-full">
               {loading && <Loader2 className="size-4 animate-spin" />} Reset password
             </Button>
-            <button type="button" onClick={() => { setStep(1); setError(null); }} className="w-full text-center text-xs font-medium text-muted-foreground hover:text-foreground">
+            <button type="button" onClick={() => { setStep(1); setError(null); setSecondsLeft(0); }} className="w-full text-center text-xs font-medium text-muted-foreground hover:text-foreground">
               Use a different email
             </button>
           </form>
