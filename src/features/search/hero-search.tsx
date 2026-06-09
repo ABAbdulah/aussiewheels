@@ -1,65 +1,97 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
+import { Search } from "lucide-react";
+import { POPULAR_MAKES, BODY_TYPES, AU_STATES } from "@/lib/site";
+import { cn } from "@/lib/utils";
 
-const modes = [
-  { value: "keyword", label: "Keyword" },
-  { value: "ai", label: "Ask AI" },
+const TABS = [
+  { key: "all", label: "All", params: {} },
+  { key: "used", label: "Used", params: { condition: "used" } },
+  { key: "new", label: "New", params: { condition: "new" } },
+  { key: "dealer", label: "Dealer", params: { sellerType: "dealer" } },
+  { key: "private", label: "Private", params: { sellerType: "private" } },
 ] as const;
 
-type Mode = (typeof modes)[number]["value"];
+const PRICE_STEPS = [10000, 20000, 30000, 40000, 50000, 75000, 100000];
 
-export function HeroSearch() {
+const selectCls =
+  "h-11 w-full appearance-none rounded-lg border border-input bg-card px-3 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-3 focus:ring-ring/30";
+
+export function HeroSearch({ className }: { className?: string }) {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("keyword");
-  const [query, setQuery] = useState("");
+  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("all");
+  const [make, setMake] = useState("");
+  const [body, setBody] = useState("");
+  const [state, setState] = useState("");
+  const [priceMax, setPriceMax] = useState("");
 
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function submit() {
     const params = new URLSearchParams();
-    if (query.trim()) params.set(mode === "ai" ? "ai" : "q", query.trim());
-    router.push(`/buy/cars?${params.toString()}`);
+    const tabParams = TABS.find((t) => t.key === tab)!.params as Record<string, string>;
+    Object.entries(tabParams).forEach(([k, v]) => params.set(k, v));
+    if (make) params.set("make", make);
+    if (body) params.set("bodyType", body);
+    if (state) params.set("state", state);
+    if (priceMax) params.set("priceMax", priceMax);
+    router.push(`/cars${params.toString() ? `?${params}` : ""}`);
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="w-full max-w-3xl rounded-2xl border bg-card p-3 shadow-sm sm:p-4"
-    >
-      <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)} className="mb-3">
-        <TabsList>
-          {modes.map((m) => (
-            <TabsTrigger key={m.value} value={m.value}>
-              {m.value === "ai" && <Sparkles className="mr-1.5 size-3.5" />}
-              {m.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
-
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={
-              mode === "ai"
-                ? "e.g. family SUV under $35k with low km"
-                : "Search make, model or keyword"
-            }
-            className="h-12 pl-10 text-base"
-          />
-        </div>
-        <Button type="submit" size="lg" className="h-12 sm:w-auto">
-          Search
-        </Button>
+    <div className={cn("w-full rounded-2xl bg-card/95 p-2 shadow-2xl ring-1 ring-foreground/10 backdrop-blur", className)}>
+      {/* Tabs */}
+      <div className="flex gap-1 px-1 pt-1">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => setTab(t.key)}
+            className={cn(
+              "rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors",
+              tab === t.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted",
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
-    </form>
+
+      {/* Fields */}
+      <div className="mt-2 grid grid-cols-1 gap-2 p-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+        <select aria-label="Make" value={make} onChange={(e) => setMake(e.target.value)} className={selectCls}>
+          <option value="">Any make</option>
+          {POPULAR_MAKES.map((m) => (
+            <option key={m} value={m}>{m}</option>
+          ))}
+        </select>
+        <select aria-label="Body type" value={body} onChange={(e) => setBody(e.target.value)} className={selectCls}>
+          <option value="">Any body type</option>
+          {BODY_TYPES.map((b) => (
+            <option key={b} value={b}>{b}</option>
+          ))}
+        </select>
+        <select aria-label="State" value={state} onChange={(e) => setState(e.target.value)} className={selectCls}>
+          <option value="">All states</option>
+          {AU_STATES.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+        <select aria-label="Max price" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} className={selectCls}>
+          <option value="">Max price</option>
+          {PRICE_STEPS.map((p) => (
+            <option key={p} value={p}>${p.toLocaleString("en-AU")}</option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={submit}
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-brand px-5 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand/90"
+        >
+          <Search className="size-4" />
+          Search
+        </button>
+      </div>
+    </div>
   );
 }

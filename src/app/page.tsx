@@ -1,227 +1,233 @@
-import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Heart, Sparkles, ShieldCheck, BadgeDollarSign, Check } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
-import { AdSlot } from "@/components/ad-slot";
-import { CarSearchBar } from "@/features/search/car-search-bar";
-import { ListingsCarousel } from "@/features/listings/listings-carousel";
-import { BodyTypePicker } from "@/features/body-types/body-type-picker";
-import { ReviewCard } from "@/features/reviews/review-card";
-import { featuredReviews } from "@/features/reviews/featured-reviews";
+import {
+  Car, Banknote, ShieldCheck, Gauge, ArrowRight, Smartphone, Apple,
+  Zap, Users, Wrench, Crown, Baby, Mountain,
+} from "lucide-react";
 import { fetchListings } from "@/lib/api";
+import { fmtNumber } from "@/lib/format";
+import { BODY_TYPES } from "@/lib/site";
+import { Section, SectionHeading } from "@/components/section";
+import { HeroSearch } from "@/features/search/hero-search";
+import { LoanCalculator } from "@/features/finance/loan-calculator";
+import { ListingCard } from "@/features/listings/listing-card";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+export const revalidate = 60;
+
+const STATS = [
+  { value: "1M+", label: "buyers / week" },
+  { value: "4.5x", label: "the nearest rival" },
+  { value: "3,000", label: "cars sold / week" },
+  { value: "$0", label: "secure payment fees" },
+];
+
+const LIFESTYLES = [
+  { label: "Family", Icon: Users, href: "/cars?bodyType=SUV" },
+  { label: "Electric", Icon: Zap, href: "/cars?fuel=Electric" },
+  { label: "Tradie", Icon: Wrench, href: "/cars?bodyType=Ute" },
+  { label: "First car", Icon: Baby, href: "/cars?priceMax=25000" },
+  { label: "Prestige", Icon: Crown, href: "/cars?priceMin=70000" },
+  { label: "Off-road 4x4", Icon: Mountain, href: "/cars?driveType=4x4" },
+];
 
 export default async function HomePage() {
-  const { items: featured } = await fetchListings({ vertical: "cars", limit: 9 });
-  const newCars = featured.slice(0, 6);
-  const specialOffers = featured.slice(3, 9);
+  const [{ items: featured }, { items: offers }] = await Promise.all([
+    fetchListings({ sort: "newest", limit: 8 }),
+    fetchListings({ specialOffer: true, sort: "featured", limit: 4 }),
+  ]);
 
   return (
-    <>
-      {/* ── Hero ── */}
-      <section>
-        {/* Full-bleed lifestyle image */}
-        <div className="relative h-[320px] w-full overflow-hidden sm:h-[380px] lg:h-[440px]">
-          <Image
-            src="https://images.unsplash.com/photo-1494905998402-395d579af36f?auto=format&fit=crop&w=1920&q=80"
-            alt="Find your next car"
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-center"
-          />
-          {/* Bottom fade so search card blends */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-background/80" />
-        </div>
+    <div className="flex flex-col gap-14 pb-20">
+      {/* ── Hero ─────────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden bg-primary text-primary-foreground">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(46,109,164,0.55),transparent_55%)]" />
+        <div className="absolute -right-20 -top-24 size-[28rem] rounded-full bg-brand/20 blur-3xl" />
+        <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-14 sm:pt-20">
+          <div className="max-w-2xl">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium ring-1 ring-white/20">
+              <ShieldCheck className="size-3.5" /> Australia&apos;s most trusted car marketplace
+            </span>
+            <h1 className="mt-4 text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl">
+              Find your next car with confidence
+            </h1>
+            <p className="mt-3 max-w-xl text-base text-primary-foreground/80 sm:text-lg">
+              Search thousands of new, used and demo cars across Australia — with transparent
+              price guides, trusted sellers and secure payments.
+            </p>
+          </div>
 
-        {/* Search card — overlaps image */}
-        <div className="relative -mt-10 px-4 pb-2 sm:-mt-14">
-          <div className="mx-auto max-w-5xl">
-            <CarSearchBar />
+          <HeroSearch className="mt-7 max-w-4xl text-foreground" />
+
+          <div className="mt-7 grid grid-cols-2 gap-4 sm:flex sm:flex-wrap sm:gap-8">
+            {STATS.map((s) => (
+              <div key={s.label}>
+                <div className="text-2xl font-bold tracking-tight">{s.value}</div>
+                <div className="text-xs text-primary-foreground/70">{s.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ── Body-type quick picks ── */}
-      <section className="mx-auto max-w-5xl px-4 pt-8 pb-4">
-        <BodyTypePicker />
-      </section>
-
-      <div className="border-b mx-4" />
-
-      {/* ── New cars carousel ── */}
-      <section className="mx-auto max-w-5xl px-8 py-8">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-semibold tracking-tight">New cars</h2>
-          <Link
-            href="/buy/cars?condition=new"
-            className="flex items-center gap-1 text-sm font-light text-primary hover:underline"
-          >
-            View all <ArrowRight className="size-3.5" />
-          </Link>
+      {/* ── Browse by body type ──────────────────────────────────────── */}
+      <Section>
+        <SectionHeading title="Browse by body type" href="/cars" hrefLabel="All cars" />
+        <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+          {BODY_TYPES.slice(0, 12).map((b) => (
+            <Link
+              key={b}
+              href={`/cars?bodyType=${encodeURIComponent(b)}`}
+              className="group flex flex-col items-center gap-2 rounded-xl border bg-card p-4 text-center ring-1 ring-foreground/5 transition-all hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-md"
+            >
+              <Car className="size-6 text-brand transition-transform group-hover:scale-110" strokeWidth={1.5} />
+              <span className="text-xs font-medium">{b}</span>
+            </Link>
+          ))}
         </div>
-        {newCars.length > 0 ? (
-          <ListingsCarousel
-            listings={newCars.map((l) => ({
-              ...l,
-              location: l.location && l.state ? `${l.location}, ${l.state}` : l.location,
-              driveaway: true,
-            }))}
-          />
-        ) : (
-          <EmptyListings />
-        )}
-      </section>
+      </Section>
 
-      {/* ── Special offers carousel ── */}
-      <section className="mx-auto max-w-5xl px-8 py-4 pb-10">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-semibold tracking-tight">Special offers</h2>
-          <Link
-            href="/buy/cars?special=true"
-            className="flex items-center gap-1 text-sm font-light text-primary hover:underline"
-          >
-            View all <ArrowRight className="size-3.5" />
-          </Link>
-        </div>
-        {specialOffers.length > 0 ? (
-          <ListingsCarousel
-            listings={specialOffers.map((l) => ({
-              ...l,
-              location: l.location && l.state ? `${l.location}, ${l.state}` : l.location,
-            }))}
-          />
-        ) : (
-          <EmptyListings />
-        )}
-      </section>
-
-      {/* ── Save searches CTA ── */}
-      <section className="bg-muted/40 py-10">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <div className="flex size-10 items-center justify-center rounded-full border">
-            <Heart className="size-4.5 text-primary" strokeWidth={1.5} />
-          </div>
-          <p className="text-base font-light">Sign up to save searches</p>
-          <p className="text-sm font-light text-muted-foreground">
-            Find your saved searches right here. Get alerts for new listings.
-          </p>
-          <Link href="/sign-up" className={`${buttonVariants({ size: "sm" })} mt-1 rounded-full! font-light`}>
-            Sign up or log in
-          </Link>
-        </div>
-      </section>
-
-      {/* ── Ad slot ── */}
-      <section className="mx-auto max-w-5xl px-4 py-8">
-        <AdSlot slotId="home-leaderboard" format="leaderboard" name="Home leaderboard" />
-      </section>
-
-      {/* ── Value your car ── */}
-      <section className="relative overflow-hidden py-16">
-        <Image
-          src="https://images.unsplash.com/photo-1532974297617-c0f05fe48bff?auto=format&fit=crop&w=1920&q=75"
-          alt=""
-          fill
-          sizes="100vw"
-          className="object-cover object-center"
-          aria-hidden
+      {/* ── Featured listings ────────────────────────────────────────── */}
+      <Section>
+        <SectionHeading
+          title="Freshly listed"
+          subtitle="The latest cars added across Australia"
+          href="/cars?sort=newest"
         />
-        <div className="absolute inset-0 bg-black/50" aria-hidden />
+        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {featured.slice(0, 8).map((l, i) => (
+            <ListingCard key={l.id} listing={l} priority={i < 4} />
+          ))}
+        </div>
+        {featured.length === 0 && <BackendHint />}
+      </Section>
 
-        <div className="relative mx-auto max-w-5xl px-4">
-          <div className="mx-auto max-w-md rounded-2xl bg-background p-7 shadow-xl">
-            <div className="inline-flex size-9 items-center justify-center rounded-lg border">
-              <BadgeDollarSign className="size-4.5" strokeWidth={1.5} />
-            </div>
-            <h2 className="mt-3 text-xl font-semibold tracking-tight">
-              See how much your car is worth
-            </h2>
-            <ul className="mt-3 space-y-1.5 text-sm font-light text-muted-foreground">
-              <li className="flex items-center gap-2">
-                <Check className="size-3.5 shrink-0" strokeWidth={2} /> Based on live market data
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="size-3.5 shrink-0" strokeWidth={2} /> No follow-up calls or strings attached
-              </li>
-            </ul>
-            <div className="mt-5 grid grid-cols-2 gap-2.5">
-              <ValueSelect label="Make" placeholder="Select" options={["Toyota", "Mazda", "Ford", "Hyundai", "Kia"]} />
-              <ValueSelect label="Model" placeholder="Select" options={[]} />
+      {/* ── Value my car banner ──────────────────────────────────────── */}
+      <Section>
+        <div className="relative overflow-hidden rounded-2xl bg-brand px-6 py-8 text-brand-foreground sm:px-10 sm:py-10">
+          <div className="absolute -right-10 -top-10 size-56 rounded-full bg-white/10 blur-2xl" />
+          <div className="relative flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-center">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">What&apos;s your car worth?</h2>
+              <p className="mt-1.5 max-w-md text-sm text-brand-foreground/85">
+                Get a free, instant valuation powered by live market data — no obligation, no
+                follow-up calls.
+              </p>
             </div>
             <Link
-              href="/value"
-              className={`${buttonVariants({ size: "lg" })} mt-4 w-full rounded-lg! font-light`}
+              href="/valuations"
+              className="inline-flex h-11 items-center gap-2 rounded-lg bg-white px-6 text-sm font-semibold text-brand shadow-sm transition-transform hover:scale-[1.02]"
             >
-              Value your car
+              Value my car <ArrowRight className="size-4" />
             </Link>
           </div>
         </div>
-      </section>
+      </Section>
 
-      {/* ── Expert reviews ── */}
-      <section className="mx-auto max-w-5xl px-4 py-12">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-lg font-semibold tracking-tight">Expert car reviews</h2>
-          <Link
-            href="/research"
-            className="flex items-center gap-1 text-sm font-light text-primary hover:underline"
-          >
-            Show all car reviews <ArrowRight className="size-3.5" />
-          </Link>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {featuredReviews.map((r) => (
-            <ReviewCard key={r.slug} {...r} />
+      {/* ── Special offers ───────────────────────────────────────────── */}
+      {offers.length > 0 && (
+        <Section>
+          <SectionHeading
+            title="Special offers"
+            subtitle="EOFY and dealer promotions ending soon"
+            href="/cars?specialOffer=true"
+          />
+          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {offers.map((l) => (
+              <ListingCard key={l.id} listing={l} />
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {/* ── Lifestyle ────────────────────────────────────────────────── */}
+      <Section>
+        <SectionHeading title="Shop by lifestyle" subtitle="Find the right car for how you live" />
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {LIFESTYLES.map(({ label, Icon, href }) => (
+            <Link
+              key={label}
+              href={href}
+              className="group flex items-center gap-3 rounded-xl border bg-card p-4 ring-1 ring-foreground/5 transition-all hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-md"
+            >
+              <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent text-brand">
+                <Icon className="size-4.5" strokeWidth={1.75} />
+              </span>
+              <span className="text-sm font-semibold">{label}</span>
+            </Link>
           ))}
         </div>
-      </section>
+      </Section>
 
-      {/* ── Inline ad ── */}
-      <section className="mx-auto max-w-5xl px-4 pb-10">
-        <AdSlot slotId="home-inline" format="inline" name="Home inline" />
-      </section>
+      {/* ── Finance + Sell pathways ──────────────────────────────────── */}
+      <Section className="grid gap-6 lg:grid-cols-2">
+        <div>
+          <SectionHeading title="Estimate your repayments" subtitle="See what a car could cost per month" />
+          <LoanCalculator className="mt-5" />
+        </div>
+        <div>
+          <SectionHeading title="Selling? Pick your path" subtitle="Three ways to sell with AussieWheels" />
+          <div className="mt-5 flex flex-col gap-3">
+            {[
+              { title: "Create an ad", body: "Reach 1M+ buyers and maximise your sale price.", href: "/sell/create", Icon: Car },
+              { title: "Instant Offer", body: "Get a firm offer and sell in as little as 24 hours.", href: "/sell/instant-offer", Icon: Banknote },
+              { title: "Trade-In", body: "Trade your car as part of your next purchase.", href: "/sell/trade-in", Icon: Gauge },
+            ].map(({ title, body, href, Icon }) => (
+              <Link
+                key={title}
+                href={href}
+                className="group flex items-center gap-4 rounded-xl border bg-card p-4 ring-1 ring-foreground/5 transition-all hover:border-brand/40 hover:shadow-md"
+              >
+                <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
+                  <Icon className="size-5" strokeWidth={1.75} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold">{title}</div>
+                  <p className="text-sm text-muted-foreground">{body}</p>
+                </div>
+                <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            ))}
+          </div>
+        </div>
+      </Section>
 
-      {/* ── Why AussieWheels ── */}
-      <section className="border-t bg-muted/30">
-        <div className="mx-auto grid max-w-5xl gap-6 px-4 py-12 sm:grid-cols-3">
-          {[
-            { icon: Sparkles, title: "AI-assisted search", body: "Describe what you need in plain English." },
-            { icon: BadgeDollarSign, title: "Transparent pricing", body: "Real market valuations. No hidden costs." },
-            { icon: ShieldCheck, title: "Verified sellers", body: "ID checks, masked contacts, scam filtering." },
-          ].map(({ icon: Icon, title, body }) => (
-            <div key={title} className="flex flex-col gap-2">
-              <Icon className="size-5 text-primary" strokeWidth={1.5} />
-              <h3 className="text-sm font-semibold tracking-tight">{title}</h3>
-              <p className="text-sm font-light text-muted-foreground">{body}</p>
+      {/* ── App download ─────────────────────────────────────────────── */}
+      <Section>
+        <div className="overflow-hidden rounded-2xl border bg-card ring-1 ring-foreground/5">
+          <div className="flex flex-col items-center gap-6 p-8 sm:flex-row sm:justify-between sm:p-10">
+            <div className="max-w-lg text-center sm:text-left">
+              <h2 className="text-2xl font-bold tracking-tight">Take AussieWheels with you</h2>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                Save searches, get instant price-drop alerts, message sellers and manage your ads —
+                all from the app.
+              </p>
+              <div className="mt-5 flex flex-wrap justify-center gap-3 sm:justify-start">
+                <span className={cn(buttonVariants({ variant: "default" }), "h-11 gap-2 px-5")}>
+                  <Apple className="size-5" /> App Store
+                </span>
+                <span className={cn(buttonVariants({ variant: "default" }), "h-11 gap-2 px-5")}>
+                  <Smartphone className="size-5" /> Google Play
+                </span>
+              </div>
             </div>
-          ))}
+            <div className="grid size-28 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground">
+              <Smartphone className="size-12" strokeWidth={1.25} />
+            </div>
+          </div>
         </div>
-      </section>
-    </>
+      </Section>
+    </div>
   );
 }
 
-/* ── Helpers ── */
-
-function EmptyListings() {
+function BackendHint() {
   return (
-    <p className="rounded-xl border border-dashed bg-muted/20 py-8 text-center text-sm font-light text-muted-foreground">
-      No listings yet — make sure the backend is running on <code className="font-mono">localhost:4000</code>.
-    </p>
-  );
-}
-
-function ValueSelect({ label, placeholder, options }: { label: string; placeholder: string; options: string[] }) {
-  return (
-    <div>
-      <label className="block text-[11px] font-light text-muted-foreground mb-1">{label}</label>
-      <div className="relative">
-        <select className="w-full h-10 appearance-none rounded-lg border border-input bg-background pl-3 pr-7 text-sm font-light focus:outline-none focus:ring-2 focus:ring-ring/50">
-          <option>{placeholder}</option>
-          {options.map((o) => <option key={o}>{o}</option>)}
-        </select>
-        <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" fill="none" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-      </div>
+    <div className="mt-5 rounded-xl border border-dashed p-8 text-center">
+      <p className="text-sm font-medium">No listings loaded</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Start the API on <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">localhost:4000</code> to see seeded cars.
+      </p>
     </div>
   );
 }

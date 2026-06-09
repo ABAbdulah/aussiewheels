@@ -1,193 +1,105 @@
-"use client";
-
 import Link from "next/link";
-import Image from "next/image";
-import { MapPin, Gauge, Heart, Camera } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
+import { Camera, MapPin, Gauge, Settings2 } from "lucide-react";
+import type { Listing } from "@/lib/api";
 import { cn } from "@/lib/utils";
-
-export type ListingCardProps = {
-  id: string;
-  title: string;
-  subtitle?: string;
-  price: number;
-  km?: number;
-  year?: number;
-  transmission?: string;
-  fuel?: string;
-  bodyType?: string;
-  cylinders?: string;
-  location?: string;
-  imageUrl?: string;
-  priceIndicator?: "great" | "fair" | "high";
-  driveaway?: boolean;
-  driveawayPrice?: number;
-  condition?: "new" | "used" | "demo";
-  sellerType?: "dealer" | "private";
-  photoCount?: number;
-  showActions?: boolean;
-};
-
-const conditionLabel: Record<string, string> = {
-  new: "Dealer new",
-  used: "Dealer used",
-  demo: "Dealer demo",
-};
-
-const priceIndicatorStyle: Record<string, string> = {
-  great: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
-  fair: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-400",
-  high: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
-};
-
-const priceIndicatorLabel: Record<string, string> = {
-  great: "Great price",
-  fair: "Around market price",
-  high: "Above market",
-};
-
-const aud = new Intl.NumberFormat("en-AU", {
-  style: "currency",
-  currency: "AUD",
-  maximumFractionDigits: 0,
-});
+import { fmtPrice, fmtKm } from "@/lib/format";
+import { CarImage } from "./car-image";
+import { SaveButton } from "./save-button";
+import {
+  PriceComparisonBadge,
+  FuelTypeBadge,
+  SellerTypeBadge,
+  ConditionBadge,
+  SpecialOfferBadge,
+} from "@/components/badges";
 
 export function ListingCard({
-  id, title, subtitle, price, km, transmission, bodyType, cylinders,
-  location, imageUrl, priceIndicator, driveaway, driveawayPrice, condition,
-  sellerType = "dealer", photoCount, showActions = false,
-}: ListingCardProps) {
+  listing,
+  priority,
+  className,
+}: {
+  listing: Listing;
+  priority?: boolean;
+  className?: string;
+}) {
+  const l = listing;
+  const subtitle = [l.transmission, l.driveType, l.engine].filter(Boolean).join(" · ");
+
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-md">
-      {/* Photo area */}
-      <Link href={`/listing/${id}`} className="block">
-        <div className="relative aspect-16/10 overflow-hidden bg-muted">
-          {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt={title}
-              fill
-              sizes="(min-width: 1024px) 50vw, 100vw"
-              className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-muted">
-              <Gauge className="size-8 text-muted-foreground/30" strokeWidth={1} />
-            </div>
-          )}
+    <Link
+      href={`/cars/${l.slug}`}
+      className={cn(
+        "group/card relative flex flex-col overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_-12px_rgba(27,58,92,0.35)] hover:ring-brand/40",
+        className,
+      )}
+    >
+      {/* Image */}
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+        <CarImage
+          src={l.images[0]}
+          alt={l.title}
+          priority={priority}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 360px"
+          className="transition-transform duration-300 group-hover/card:scale-[1.04]"
+        />
 
-          {/* Photo count */}
-          {photoCount && photoCount > 0 && (
-            <span className="absolute left-2 top-2 flex items-center gap-1 rounded bg-black/60 px-1.5 py-0.5 text-[11px] text-white backdrop-blur-sm">
-              <Camera className="size-3" />
-              {photoCount}
-            </span>
-          )}
-
-          {/* Save */}
-          <button
-            aria-label="Save listing"
-            onClick={(e) => e.preventDefault()}
-            className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-background/80 backdrop-blur transition hover:bg-background"
-          >
-            <Heart className="size-3.5 text-foreground/50" strokeWidth={1.5} />
-          </button>
-        </div>
-      </Link>
-
-      {/* Content */}
-      <div className="flex flex-1 flex-col p-3.5">
-        {/* Badges row */}
-        <div className="mb-2 flex flex-wrap items-center gap-1.5">
-          {condition && (
-            <span className="rounded border px-2 py-0.5 text-[11px] font-light text-foreground/70">
-              {sellerType === "private" ? "Private seller" : conditionLabel[condition] ?? condition}
-            </span>
-          )}
-          {priceIndicator && (
-            <span className={cn("flex items-center gap-1 rounded border px-2 py-0.5 text-[11px] font-light", priceIndicatorStyle[priceIndicator])}>
-              {priceIndicatorLabel[priceIndicator]}
-            </span>
-          )}
+        {/* top-left status badges */}
+        <div className="absolute left-2.5 top-2.5 flex flex-wrap items-center gap-1.5">
+          {l.specialOffer && <SpecialOfferBadge />}
+          {l.condition !== "used" && <ConditionBadge condition={l.condition} />}
         </div>
 
-        {/* Title */}
-        <Link href={`/listing/${id}`}>
-          <h3 className="line-clamp-2 text-base font-semibold leading-snug tracking-tight hover:text-primary transition-colors">
-            {title}
-          </h3>
-        </Link>
-        {subtitle && (
-          <p className="mt-0.5 truncate text-xs font-light text-muted-foreground">{subtitle}</p>
-        )}
-
-        {/* Price */}
-        <div className="mt-2.5">
-          <span className="text-xl font-bold tracking-tight">{aud.format(price)}</span>
-          {(driveaway || driveawayPrice) && (
-            <div className="mt-0.5 text-xs font-light">
-              Drive away{" "}
-              {driveawayPrice && (
-                <span className="text-primary">{aud.format(driveawayPrice)}</span>
-              )}{" "}
-              <span className="text-muted-foreground">Excl. Est. Govt. Charges</span>
-            </div>
-          )}
+        {/* top-right save */}
+        <div className="absolute right-2.5 top-2.5">
+          <SaveButton listing={l} />
         </div>
 
-        {/* Specs grid */}
-        {(bodyType || cylinders || transmission || km != null) && (
-          <div className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-1 text-xs font-light text-muted-foreground">
-            {bodyType && (
-              <span className="flex items-center gap-1.5 truncate">
-                <span className="size-3 shrink-0">🚗</span>{bodyType}
-              </span>
-            )}
-            {cylinders && (
-              <span className="flex items-center gap-1.5 truncate">
-                <span className="size-3 shrink-0">⚙️</span>{cylinders}
-              </span>
-            )}
-            {transmission && (
-              <span className="flex items-center gap-1.5 truncate">
-                <span className="size-3 shrink-0">🔧</span>{transmission}
-              </span>
-            )}
-            {km != null && (
-              <span className="flex items-center gap-1.5 truncate">
-                <Gauge className="size-3 shrink-0" strokeWidth={1.5} />
-                {km.toLocaleString("en-AU")} km
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Location */}
-        {location && (
-          <p className="mt-2 flex items-center gap-1 text-[11px] font-light text-muted-foreground">
-            <MapPin className="size-3 shrink-0" strokeWidth={1.5} />
-            {location}
-          </p>
-        )}
-
-        {/* Action buttons */}
-        {showActions && (
-          <div className="mt-3.5 grid grid-cols-2 gap-2">
-            <Link
-              href={`/listing/${id}#contact`}
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "w-full rounded-lg! font-light text-xs")}
-            >
-              Contact dealer
-            </Link>
-            <Link
-              href={`/listing/${id}`}
-              className={cn(buttonVariants({ size: "sm" }), "w-full rounded-lg! font-light text-xs")}
-            >
-              View details
-            </Link>
-          </div>
-        )}
+        {/* photo count */}
+        <div className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur">
+          <Camera className="size-3" />
+          {l.photoCount}
+        </div>
       </div>
-    </div>
+
+      {/* Body */}
+      <div className="flex flex-1 flex-col gap-2.5 p-3.5">
+        <div className="min-h-[2.6rem]">
+          <h3 className="line-clamp-1 text-[15px] font-semibold tracking-tight text-foreground">
+            {l.title}
+          </h3>
+          {subtitle && <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{subtitle}</p>}
+        </div>
+
+        {/* Price — visually dominant */}
+        <div className="flex items-end justify-between gap-2">
+          <div>
+            <div className="text-xl font-bold tracking-tight text-foreground tnum">{fmtPrice(l.price)}</div>
+            <div className="text-[11px] text-muted-foreground">
+              {l.driveawayPrice ? `${fmtPrice(l.driveawayPrice)} drive away` : "Excl. gov. charges"}
+            </div>
+          </div>
+          {l.priceIndicator && <PriceComparisonBadge indicator={l.priceIndicator} />}
+        </div>
+
+        {/* Specs */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <Gauge className="size-3.5" /> {fmtKm(l.odometer)}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Settings2 className="size-3.5" /> {l.year}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <MapPin className="size-3.5" /> {l.location}
+          </span>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-auto flex items-center justify-between gap-2 border-t border-border/70 pt-2.5">
+          <FuelTypeBadge fuel={l.fuel} />
+          <SellerTypeBadge seller={l.sellerType} />
+        </div>
+      </div>
+    </Link>
   );
 }
